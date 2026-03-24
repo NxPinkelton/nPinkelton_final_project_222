@@ -1,4 +1,4 @@
-# trythisshit
+# CS222 Final Project
 
 A new Flutter project.
 
