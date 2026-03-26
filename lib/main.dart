@@ -49,7 +49,7 @@ class _EligibilityScreenState extends State<EligibilityScreen> {
           _usernameController.text.trim(), _tagController.text.trim());
       final matchIds = await _service.requestMatchList(puuid);
       final matchData = await _service.requestMatchData(matchIds.first);
-      final participant = _parser.searchPlayerId(jsonEncode(matchData), puuid)!;
+      final participant = _parser.searchForPlayerId(jsonEncode(matchData), puuid)!;
 
       setState(() {
         _stats = _parser.pullGameStatistics(participant);
