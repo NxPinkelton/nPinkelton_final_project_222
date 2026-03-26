@@ -57,7 +57,7 @@ class _EligibilityScreenState extends State<EligibilityScreen> {
         _message = 'To enter the Spring Invitational, your KDA must be above 2.0.';
       });
     } catch (e) {
-      setState(() => _message = 'Error: $e');
+      setState(() => _message = 'Error: Name / Tag not found');
     } finally {
       setState(() => _loading = false);
     }
