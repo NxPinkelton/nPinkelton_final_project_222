@@ -18,4 +18,17 @@ class playerRecord {
     required this.kda,
     required this.damagePerMinute
   });
+
+  /// Returns a display-ready string for the given stat label.
+  String formattedStatRow(String stat) {
+    switch (stat) {
+      case 'Champion': return championName;
+      case 'Champion Level': return '$championLevel';
+      case 'Kills': return '$kills';
+      case 'Deaths': return '$deaths';
+      case 'KDA': return kda.toStringAsFixed(2);
+      case 'Damage / Min': return damagePerMinute.toStringAsFixed(1);
+      default: return '';
+    }
+  }
 }

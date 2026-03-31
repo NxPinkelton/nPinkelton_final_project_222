@@ -2,44 +2,37 @@ import 'package:nPinkelton_final_project_222/data_parser.dart';
 import 'package:test/test.dart';
 import 'dart:io';
 
+const _testPuuid = 'nvPdRr7ZMzx5uMWQ9Wj90K5KtekgFysWazHv6BTXScrt-5lDO6YXI-VzBpSkQT7q01aw-hq63nOR2A';
+
 void main() {
-  test('Matches the puuid with the player', () async {
-    final playerData = await File('test/sample_data.json').readAsString();
-    final identifier = DataParser();
-    final player = identifier.searchForPlayerId(playerData,
-        'nvPdRr7ZMzx5uMWQ9Wj90K5KtekgFysWazHv6BTXScrt-5lDO6YXI-VzBpSkQT7q01aw-hq63nOR2A');
-    expect(player, isNotNull);
-    expect(player!['puuid'],
-        equals('nvPdRr7ZMzx5uMWQ9Wj90K5KtekgFysWazHv6BTXScrt-5lDO6YXI-VzBpSkQT7q01aw-hq63nOR2A')
-    );
+  late String playerData;
+  late DataParser parser;
+
+  setUp(() async {
+    playerData = await File('test/sample_data.json').readAsString();
+    parser = DataParser();
   });
 
-  test("Gets the player's character info", () async {
-    final playerData = await File('test/sample_data.json').readAsString();
-    final identifier = DataParser();
-    final player = identifier.searchForPlayerId(playerData,
-        'nvPdRr7ZMzx5uMWQ9Wj90K5KtekgFysWazHv6BTXScrt-5lDO6YXI-VzBpSkQT7q01aw-hq63nOR2A'
-    );
-    final playerCharacter = identifier.pullCharacterInfo(player!);
+  test('Finds the participant record matching the given puuid', () {
+    final player = parser.playerByPuuid(playerData, puuid: _testPuuid);
     expect(player, isNotNull);
-    expect(playerCharacter, isNotNull);
-    expect(playerCharacter!['championName'], 'Ornn');
-    expect(playerCharacter['champLevel'], 14);
-    expect(playerCharacter['champExperience'], 12569);
+    expect(player!.puuid, equals(_testPuuid));
   });
 
-  test("Gets the player's in-game statistics", () async {
-    final playerData = await File('test/sample_data.json').readAsString();
-    final identifier = DataParser();
-    final player = identifier.searchForPlayerId(playerData,
-        'nvPdRr7ZMzx5uMWQ9Wj90K5KtekgFysWazHv6BTXScrt-5lDO6YXI-VzBpSkQT7q01aw-hq63nOR2A'
-    );
+  test("Parses the player's champion info from match data", () {
+    final player = parser.playerByPuuid(playerData, puuid: _testPuuid);
     expect(player, isNotNull);
+    expect(player!.championName, equals('Ornn'));
+    expect(player.championLevel, equals(14));
+    expect(player.championExperience, equals(12569));
+  });
 
-    final playerStatistics = identifier.pullGameStatistics(player!);
-    expect(playerStatistics!['kills'], 1);
-    expect(playerStatistics['deaths'], 3);
-    expect(playerStatistics['damagePerMinute'], 347.09532768950385);
-    expect(playerStatistics['kda'],  0.6666666666666666);
+  test("Parses the player's in-game statistics from match data", () {
+    final player = parser.playerByPuuid(playerData, puuid: _testPuuid);
+    expect(player, isNotNull);
+    expect(player!.kills, equals(1));
+    expect(player.deaths, equals(3));
+    expect(player.damagePerMinute, closeTo(347.0953, 0.0001));
+    expect(player.kda, closeTo(0.6667, 0.0001));
   });
 }

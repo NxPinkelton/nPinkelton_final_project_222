@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:nPinkelton_final_project_222/player_record.dart';
 import 'esports_services.dart';
 import 'data_parser.dart';
 
@@ -31,33 +32,48 @@ class EligibilityScreen extends StatefulWidget {
 }
 
 class _EligibilityScreenState extends State<EligibilityScreen> {
-  final _usernameController = TextEditingController();
-  final _tagController = TextEditingController();
+  final _usernameOneController = TextEditingController();
+  final _tagOneController = TextEditingController();
+  final _usernameTwoController = TextEditingController();
+  final _tagTwoController = TextEditingController();
+
   final _service = EsportsService();
-  final _parser = DataParser();
 
   bool _loading = false;
-  String? _message;
-  Map<String, dynamic>? _stats;
-  Map<String, dynamic>? _charInfo;
+  String? _errorMessage;
+  playerRecord? _playerOne;
+  playerRecord? _playerTwo;
 
-  Future<void> _lookup() async {
-    setState(() { _loading = true; _message = null; _stats = null; _charInfo = null; });
+  // bool get _hasOpponentInput =>
+  //     _usernameTwoController.text.trim().isNotEmpty &&
+  //         _tagTwoController.text.trim().isNotEmpty;
+
+  Future<void> _search() async {
+    setState(() { _loading = true;
+      _errorMessage = null;
+      _playerOne = null;
+      _playerTwo = null; });
 
     try {
-      final puuid = await _service.requestIdentification(
-          _usernameController.text.trim(), _tagController.text.trim());
-      final matchIds = await _service.requestMatchList(puuid);
-      final matchData = await _service.requestMatchData(matchIds.first);
-      final participant = _parser.searchForPlayerId(jsonEncode(matchData), puuid)!;
+      final playerOne = await _service.requestPlayerData(
+        _usernameOneController.text.trim(),
+        _tagOneController.text.trim(),
+      );
+      // final playerTwo = _hasOpponentInput
+      //     ? await _service.requestPlayerData(
+      //   _usernameTwoController.text.trim(),
+      //   _tagTwoController.text.trim(),
+      // )
+      // : null;
 
-      setState(() {
-        _stats = _parser.pullGameStatistics(participant);
-        _charInfo = _parser.pullCharacterInfo(participant);
-        _message = 'To enter the Spring Invitational, your KDA must be above 2.0.';
+
+
+    setState(() {
+        _playerOne = playerOne
+        //_playerTwo = playerTwo
       });
     } catch (e) {
-      setState(() => _message = 'Error: Name / Tag not found');
+      setState(() => _errorMessage = 'Error: Name / Tag not found');
     } finally {
       setState(() => _loading = false);
     }
@@ -86,14 +102,14 @@ class _EligibilityScreenState extends State<EligibilityScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _loading ? null : _lookup,
+              onPressed: _loading ? null : _search,
               child: _loading
                   ? const CircularProgressIndicator()
                   : const Text('Search Stats'),
             ),
-            if (_message != null) ...[
+            if (_errorMessage != null) ...[
               const SizedBox(height: 24),
-              Text(_message!, style: const TextStyle(fontSize: 14, color: Colors.black)),
+              Text(_errorMessage!, style: const TextStyle(fontSize: 14, color: Colors.black)),
             ],
             if (_stats != null && _charInfo != null) ...[
               const SizedBox(height: 16),
@@ -104,6 +120,9 @@ class _EligibilityScreenState extends State<EligibilityScreen> {
               _StatRow('Deaths', '${_stats!['deaths']}'),
               _StatRow('KDA', (_stats!['kda'] as num).toStringAsFixed(2)),
               _StatRow('Damage / Min', (_stats!['damagePerMinute'] as num).toStringAsFixed(1)),
+              ElevatedButton( //Button asking if they want to search another person up
+                  onPressed: onPressed,
+                  child: child)
             ],
           ],
         ),
