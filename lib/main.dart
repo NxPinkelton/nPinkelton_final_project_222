@@ -114,7 +114,7 @@ class _EligibilityScreenState extends State<EligibilityScreen> {
                 children: [
                   if (playerList.isNotEmpty) ...[
                     for (int i = 0; i < playerList.length; i++) ...[
-                      SizedBox(height: 24),
+                      SizedBox(),
                       _StatsDisplay(playerOne: playerList[i])
                     ],
                   ],
@@ -177,14 +177,17 @@ class _StatsDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: _statLabels
-          .map((stat) =>
-          _StatRow(
-        label: stat,
-        valueOne: playerOne.formattedStatRow(stat),
-      ))
-          .toList(),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: _statLabels
+            .map((stat) =>
+            _StatRow(
+          label: stat,
+          valueOne: playerOne.formattedStatRow(stat),
+        ))
+            .toList(),
+      ),
     );
   }
 }
