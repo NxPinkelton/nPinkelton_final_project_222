@@ -13,6 +13,8 @@ const _statLabels = [
   'Damage / Min',
 ];
 
+var playerList = <playerRecord>[];
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   assert(() {
@@ -43,26 +45,18 @@ class EligibilityScreen extends StatefulWidget {
 class _EligibilityScreenState extends State<EligibilityScreen> {
   final _usernameOneController = TextEditingController();
   final _tagOneController = TextEditingController();
-  final _usernameTwoController = TextEditingController();
-  final _tagTwoController = TextEditingController();
 
   final _service = EsportsService();
 
   bool _loading = false;
   String? _errorMessage;
   playerRecord? _playerOne;
-  playerRecord? _playerTwo;
-
-  bool get _hasOpponentInput =>
-      _usernameTwoController.text.trim().isNotEmpty &&
-          _tagTwoController.text.trim().isNotEmpty;
 
   Future<void> _search() async {
     setState(() {
       _loading = true;
       _errorMessage = null;
       _playerOne = null;
-      _playerTwo = null;
     });
 
     try {
@@ -70,22 +64,22 @@ class _EligibilityScreenState extends State<EligibilityScreen> {
         _usernameOneController.text.trim(),
         _tagOneController.text.trim(),
       );
-      final playerTwo = _hasOpponentInput
-          ? await _service.requestPlayerData(
-        _usernameTwoController.text.trim(),
-        _tagTwoController.text.trim(),
-      )
-          : null;
 
       setState(() {
         _playerOne = playerOne;
-        _playerTwo = playerTwo;
+        playerList.add(_playerOne!);
       });
     } catch (e) {
       setState(() => _errorMessage = 'Error: One or both players could not be found.');
     } finally {
       setState(() => _loading = false);
     }
+  }
+
+  Future<void> _clearPlayerList() async {
+    setState(() {
+      playerList.clear();
+    });
   }
 
   @override
@@ -103,13 +97,7 @@ class _EligibilityScreenState extends State<EligibilityScreen> {
               tagController: _tagOneController,
             ),
             const SizedBox(height: 16),
-            _PlayerInputSection(
-              hint: 'Add an opponent to compare (optional)',
-              usernameController: _usernameTwoController,
-              tagController: _tagTwoController,
-              usernameLabel: 'Opponent Username',
-              tagLabel: 'Opponent Tag',
-            ),
+            Text('Search for as many Players as you want'),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _loading ? null : _search,
@@ -121,10 +109,25 @@ class _EligibilityScreenState extends State<EligibilityScreen> {
               const SizedBox(height: 16),
               Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
             ],
-            if (_playerOne != null) ...[
-              const SizedBox(height: 24),
-              _StatsDisplay(playerOne: _playerOne!, playerTwo: _playerTwo),
-            ],
+            Flexible(
+              child: Row(
+                children: [
+                  if (playerList.isNotEmpty) ...[
+                    for (int i = 0; i < playerList.length; i++) ...[
+                      SizedBox(height: 24),
+                      _StatsDisplay(playerOne: playerList[i])
+                    ],
+                  ],
+                ],
+              ),
+            ),
+            if (playerList.isNotEmpty) ...[
+            ElevatedButton(
+                onPressed: _clearPlayerList,
+                child: _loading
+                ? const CircularProgressIndicator()
+                : const Text('Clear Player List')
+            )],
           ],
         ),
       ),
@@ -170,18 +173,16 @@ class _PlayerInputSection extends StatelessWidget {
 
 class _StatsDisplay extends StatelessWidget {
   final playerRecord playerOne;
-  final playerRecord? playerTwo;
-
-  const _StatsDisplay({required this.playerOne, required this.playerTwo});
+  const _StatsDisplay({required this.playerOne,});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: _statLabels
-          .map((stat) => _StatRow(
+          .map((stat) =>
+          _StatRow(
         label: stat,
         valueOne: playerOne.formattedStatRow(stat),
-        valueTwo: playerTwo?.formattedStatRow(stat),
       ))
           .toList(),
     );
@@ -191,12 +192,10 @@ class _StatsDisplay extends StatelessWidget {
 class _StatRow extends StatelessWidget {
   final String label;
   final String valueOne;
-  final String? valueTwo;
 
   const _StatRow({
     required this.label,
     required this.valueOne,
-    required this.valueTwo,
   });
 
   @override
@@ -208,8 +207,6 @@ class _StatRow extends StatelessWidget {
         children: [
           Text(valueOne, style: const TextStyle(fontWeight: FontWeight.bold)),
           Text(label, style: const TextStyle(color: Colors.grey)),
-          if (valueTwo != null)
-            Text(valueTwo!, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );
